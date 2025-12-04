@@ -12,16 +12,16 @@ export default function App() {
     // This function fetches real data from your Cloudflare Worker
     const fetchData = async () => {
       try {
-        // We are fetching the "AWS" vendor we tested earlier
+        // Fetch the "AWS" vendor status from your API
         const response = await fetch(`${API_URL}/vendor/AWS`);
         const data = await response.json();
         
-        // We format it to look good in the table
+        // Format the data for the table
         setVendors([
           { 
             name: "AWS", 
-            amount: 14250.00, // In a real app, this would come from the DB too
-            status: data.status, // REAL STATUS from Durable Object
+            amount: 14250.00, 
+            status: data.status, // REAL STATUS from the Durable Object
             confidence: 98,
             source: data.source 
           }
@@ -39,13 +39,13 @@ export default function App() {
   return (
     <div className="flex h-screen font-sans bg-slate-50 text-slate-900">
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-slate-200 p-6">
+      <aside className="w-64 bg-white border-r border-slate-200 p-6 flex flex-col">
         <h1 className="text-xl font-bold mb-8 flex items-center gap-2">
           <div className="w-6 h-6 bg-slate-900 rounded"></div>
           CloudAccrual
         </h1>
         <nav className="space-y-2">
-          <button className="flex items-center gap-3 w-full px-3 py-2 bg-slate-100 rounded text-sm font-medium">
+          <button className="flex items-center gap-3 w-full px-3 py-2 bg-slate-100 rounded text-sm font-medium text-slate-900">
             <LayoutDashboard size={18}/> Dashboard
           </button>
         </nav>
@@ -55,9 +55,9 @@ export default function App() {
       <main className="flex-1 p-8">
         <header className="mb-8">
           <h2 className="text-2xl font-bold">Financial Period: Oct 2025</h2>
-          <div className="flex items-center gap-2 text-slate-500">
-             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-             <p>Live Connection to Cloudflare Workers</p>
+          <div className="flex items-center gap-2 text-slate-500 mt-2">
+             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+             <p className="text-sm">Live Connection to Cloudflare Workers</p>
           </div>
         </header>
 
@@ -69,12 +69,12 @@ export default function App() {
                 <th className="px-6 py-3 font-medium text-slate-700">Vendor</th>
                 <th className="px-6 py-3 font-medium text-slate-700">Real Status (from DO)</th>
                 <th className="px-6 py-3 font-medium text-slate-700">Source</th>
-                <th className="px-6 py-3 font-medium text-slate-700">Action</th>
+                <th className="px-6 py-3 font-medium text-slate-700">Confidence</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={4} className="p-8 text-center"><Loader2 className="animate-spin mx-auto"/></td></tr>
+                <tr><td colSpan={4} className="p-8 text-center"><Loader2 className="animate-spin mx-auto text-slate-400"/></td></tr>
               ) : vendors.map((v) => (
                 <tr key={v.name} className="border-b border-slate-100 hover:bg-slate-50/50">
                   <td className="px-6 py-4 font-medium">{v.name}</td>
@@ -87,7 +87,7 @@ export default function App() {
                     {v.source}
                   </td>
                   <td className="px-6 py-4">
-                    <button className="text-blue-600 hover:underline font-medium">View Details</button>
+                    <span className="text-emerald-600 font-bold">{v.confidence}%</span>
                   </td>
                 </tr>
               ))}
