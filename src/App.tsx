@@ -1,30 +1,64 @@
-import { useState } from 'react';
-import { LayoutDashboard, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { LayoutDashboard, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+
+// YOUR ACTUAL BACKEND URL
+const API_URL = "https://cloudaccrual-api.ct-trading-bot1.workers.dev";
 
 export default function App() {
-  const [vendors] = useState([
-    { name: "AWS", amount: 14250.00, status: "Ready", confidence: 98 },
-    { name: "Twilio", amount: 2100.50, status: "Pending", confidence: 45 },
-    { name: "Datadog", amount: 8500.00, status: "Ready", confidence: 92 },
-  ]);
+  const [vendors, setVendors] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // This function fetches real data from your Cloudflare Worker
+    const fetchData = async () => {
+      try {
+        // We are fetching the "AWS" vendor we tested earlier
+        const response = await fetch(`${API_URL}/vendor/AWS`);
+        const data = await response.json();
+        
+        // We format it to look good in the table
+        setVendors([
+          { 
+            name: "AWS", 
+            amount: 14250.00, // In a real app, this would come from the DB too
+            status: data.status, // REAL STATUS from Durable Object
+            confidence: 98,
+            source: data.source 
+          }
+        ]);
+      } catch (error) {
+        console.error("Failed to fetch", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
-    <div className="flex h-screen font-sans">
+    <div className="flex h-screen font-sans bg-slate-50 text-slate-900">
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-slate-200 p-6 flex flex-col">
-        <h1 className="text-xl font-bold mb-8 text-slate-900">CloudAccrual</h1>
+      <aside className="w-64 bg-white border-r border-slate-200 p-6">
+        <h1 className="text-xl font-bold mb-8 flex items-center gap-2">
+          <div className="w-6 h-6 bg-slate-900 rounded"></div>
+          CloudAccrual
+        </h1>
         <nav className="space-y-2">
-          <button className="flex items-center gap-3 w-full px-3 py-2 bg-slate-100 text-slate-900 rounded text-sm font-medium">
+          <button className="flex items-center gap-3 w-full px-3 py-2 bg-slate-100 rounded text-sm font-medium">
             <LayoutDashboard size={18}/> Dashboard
           </button>
         </nav>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-8 overflow-auto">
+      <main className="flex-1 p-8">
         <header className="mb-8">
-          <h2 className="text-2xl font-bold text-slate-900">Financial Period: Oct 2025</h2>
-          <p className="text-slate-500">Overview of current AI estimates</p>
+          <h2 className="text-2xl font-bold">Financial Period: Oct 2025</h2>
+          <div className="flex items-center gap-2 text-slate-500">
+             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+             <p>Live Connection to Cloudflare Workers</p>
+          </div>
         </header>
 
         {/* Table */}
@@ -33,31 +67,27 @@ export default function App() {
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="px-6 py-3 font-medium text-slate-700">Vendor</th>
-                <th className="px-6 py-3 font-medium text-slate-700">Estimate</th>
-                <th className="px-6 py-3 font-medium text-slate-700">Confidence</th>
+                <th className="px-6 py-3 font-medium text-slate-700">Real Status (from DO)</th>
+                <th className="px-6 py-3 font-medium text-slate-700">Source</th>
                 <th className="px-6 py-3 font-medium text-slate-700">Action</th>
               </tr>
             </thead>
             <tbody>
-              {vendors.map((v) => (
-                <tr key={v.name} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
-                  <td className="px-6 py-4 font-medium text-slate-900">{v.name}</td>
-                  <td className="px-6 py-4 text-slate-600">${v.amount.toLocaleString()}</td>
+              {loading ? (
+                <tr><td colSpan={4} className="p-8 text-center"><Loader2 className="animate-spin mx-auto"/></td></tr>
+              ) : vendors.map((v) => (
+                <tr key={v.name} className="border-b border-slate-100 hover:bg-slate-50/50">
+                  <td className="px-6 py-4 font-medium">{v.name}</td>
                   <td className="px-6 py-4">
-                    <span className={`font-bold ${v.confidence > 90 ? "text-emerald-600" : "text-amber-600"}`}>
-                      {v.confidence}%
-                    </span>
+                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                        {v.status}
+                     </span>
+                  </td>
+                  <td className="px-6 py-4 text-slate-500 font-mono text-xs">
+                    {v.source}
                   </td>
                   <td className="px-6 py-4">
-                    {v.confidence > 90 ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        <CheckCircle2 size={12}/> Auto-Drafted
-                      </span>
-                    ) : (
-                      <button className="inline-flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium bg-amber-600 text-white hover:bg-amber-700 shadow-sm">
-                        <AlertCircle size={12}/> Review Needed
-                      </button>
-                    )}
+                    <button className="text-blue-600 hover:underline font-medium">View Details</button>
                   </td>
                 </tr>
               ))}
